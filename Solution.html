@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+
+<html>
+
+<head>
+	<title>Прихващач в 3 измерно пространство</title>
+	<meta charset="utf-8">
+
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+	<script src="libs/three.min.js"></script>
+	<script src="libs/dat.gui.min.js"></script>
+	<script src="libs/WebGL.js"></script>
+	<script src="libs/OrbitControls.js"></script>
+	<script src="libs/vax.js"></script>
+	<script src="libs/scene.js"></script>
+</head>
+
+<body>
+	<script>
+		//Task: create a robot with DOF=3, that can reach randomly generated point
+		sceneInit();
+		sceneObjects();
+
+		// orbital navigation
+		var control = new THREE.OrbitControls(camera, renderer.domElement);
+
+		// angle control
+		var gui = new dat.GUI();
+		gui.domElement.style.marginRight = 0;
+		var pose = {
+			randomize: randomize,
+			solve: solve,
+			alpha: 60,
+			beta: 110,
+			gamma: 0
+		};
+
+		gui.add(pose, 'randomize').name('Наново');
+		gui_alpha = gui.add(pose, 'alpha', 1, 179).name('&alpha;').step(0.1);
+		gui_beta = gui.add(pose, 'beta', 1, 359).name('&beta;').step(0.1);
+		gui_gamma = gui.add(pose, 'gamma', 1, 359).name('&gamma;').step(0.1);
+
+		gui.add(pose, 'solve').name('Реши!');
+		gui.open();
+
+
+		//first element of the robot
+		var a = robotElement(1, 40, 5);
+		scene.add(a);
+
+		//second element of the robot
+		var b = robotElement(0.75, 37.5, 2, a);
+		var end = new THREE.Mesh(
+			new THREE.TorusBufferGeometry(3, 1, 10, 50),
+			robotMaterial
+		);
+		end.position.y = 40;
+		end.castShadow = true;
+		b.add(end);
+
+		function randomize() {
+			p.position.x = THREE.Math.randFloat(-80, 80);
+			p.position.y = THREE.Math.randFloat(20, 70);
+			p.position.z = THREE.Math.randFloat(-40, 40);
+			console.log(`x: ${p.position.x}`)
+			console.log(`y: ${p.position.y}`)
+			console.log(`z: ${p.position.z}`)
+		}
+
+		function animate() {
+			setTimeout(() => {
+				a.rotation.z = THREE.Math.degToRad(pose.alpha - 90);
+				b.rotation.z = THREE.Math.degToRad(180 - pose.beta);
+				a.rotation.y = THREE.Math.degToRad(pose.gamma);
+				control.update();
+			}, 1000);
+		}
+
+		randomize();
+
+
+		const positionGamma = (x, hi) => {
+
+			if (x > 0) {
+				if (p.position.z > 0) {
+					pose.gamma = 180 - hi
+				}
+				else {
+					pose.gamma = hi;
+				}
+			}
+			else {
+				if (p.position.z > 0) {
+					pose.gamma = hi;
+				}
+				else {
+					pose.gamma = 180 - hi
+				}
+			}
+		}
+
+
+		//both robot elements are 40 units long
+		//robot base is at (0,0,0)
+		//p is point for reaching
+		//robot angles are pos.alpha and pose.beta
+		function solve() {
+
+			const oo1 = Math.sqrt(Math.pow(p.position.x, 2) + Math.pow(p.position.y, 2) + Math.pow(p.position.z, 2));//distance between p and the base
+			const a = 40;//side of the catcher
+			const x = p.position.x;
+			const y = p.position.y;
+			const z = p.position.z;
+
+			const hi = Math.atan(Math.abs(z) / Math.abs(x)) * 180 / Math.PI;
+			positionGamma(p.position.x, hi)
+
+			if (oo1 < 80) {//if point is reachable, we calculate based on the angles from the theoretical solution
+				
+				const phi = Math.acos(Math.sqrt(x * x + y * y + z * z) / (2 * a)) * 180 / Math.PI;
+				const tita = Math.atan(y / (Math.sqrt(x * x + z * z))) * 180 / Math.PI;
+				const phtita = phi + tita;
+
+				const beta = 180 - 2 * phi;
+				if (x > 0 && z > 0) {
+					pose.alpha = 180 - phtita;
+					pose.beta = beta;
+				} else if (x > 0 && z < 0) {
+					pose.alpha = phtita;
+					pose.beta = 360 - beta;
+				} else if (x < 0 && z > 0) {
+					pose.alpha = 180 - phtita;
+					pose.beta = beta;
+				} else {//x<0, x<0
+					pose.alpha = phtita;
+					pose.beta = 360 - beta;
+				}
+			} else {
+				console.log("in further:");
+				//else we straighten beta and point the robot with alpha at the point's direction
+				pose.beta = 180;
+
+				let a = Math.atan((p.position.y / Math.abs(p.position.x))) * 180 / Math.PI;
+				console.log(a);
+				if (x > 0 && z > 0) {
+					console.log("in first");
+					pose.alpha = 180 - a;
+				} else if (x > 0 && z < 0) {
+					console.log("in second");
+					pose.alpha = a;
+				} else if (x < 0 && z > 0) {
+					console.log("in third");
+					pose.alpha = 180 - a;
+				}
+				else if (x < 0 && z < 0) {
+					console.log("in fourth");
+					pose.alpha = a;
+				}
+			}
+
+			gui.updateDisplay();
+		}
+
+	</script>
+</body>
+
+</html>
