@@ -25,12 +25,19 @@
 		// orbital navigation
 		var control = new THREE.OrbitControls(camera, renderer.domElement);
 
+		let isSolved = false;
 		// angle control
 		var gui = new dat.GUI();
 		gui.domElement.style.marginRight = 0;
 		var pose = {
 			randomize: randomize,
 			solve: solve,
+			alpha: 60,
+			beta: 100,
+			gamma: 0
+		};
+
+		let poseFinal = {
 			alpha: 60,
 			beta: 110,
 			gamma: 0
@@ -43,6 +50,7 @@
 
 		gui.add(pose, 'solve').name('Реши!');
 		gui.open();
+		var speeds = { speedAlpha: 0, speedBeta: 0, speedGamma: 0 };
 
 
 		//first element of the robot
@@ -66,15 +74,55 @@
 			console.log(`x: ${p.position.x}`)
 			console.log(`y: ${p.position.y}`)
 			console.log(`z: ${p.position.z}`)
+			isSolved = false;
 		}
 
+		let T = 20;
+		let isSpeedCalculated = false;
+		let v1 = 0;
+		let v2 = 0;
+		let v3 = 0;
 		function animate() {
-			setTimeout(() => {
-				a.rotation.z = THREE.Math.degToRad(pose.alpha - 90);
-				b.rotation.z = THREE.Math.degToRad(180 - pose.beta);
-				a.rotation.y = THREE.Math.degToRad(pose.gamma);
-				control.update();
-			}, 1000);
+			a.rotation.z = THREE.Math.degToRad(pose.alpha - 90);
+			b.rotation.z = THREE.Math.degToRad(180 - pose.beta);
+			a.rotation.y = THREE.Math.degToRad(pose.gamma);
+
+
+			if (pose.alpha != poseFinal.alpha || pose.beta != poseFinal.beta || pose.gamma != poseFinal.gamma) {
+				console.log(pose)
+				console.log(poseFinal)
+				let directives = determineDirections(pose, poseFinal);
+				if (directives.incrAlpha) {
+					pose.alpha + 1 > poseFinal.alpha ?
+						pose.alpha = poseFinal.alpha :
+						pose.alpha += 1;
+				} else {
+					pose.alpha - 1 < poseFinal.alpha ?
+						pose.alpha = poseFinal.alpha :
+						pose.alpha -= 1;
+				}
+				if (directives.incrBeta) {
+					pose.beta + 1 > poseFinal.beta ?
+						pose.beta = poseFinal.beta :
+						pose.beta += 1;
+				} else {
+					pose.beta - 1 < poseFinal.beta ?
+						pose.beta = poseFinal.beta :
+						pose.beta -= 1;
+				}
+				if (directives.incrGamma) {
+					pose.gamma + 1 < poseFinal.gamma ?
+						pose.gamma = poseFinal.gamma :
+						pose.gamma += 1;
+				} else {
+					pose.gamma - 1 < poseFinal.gamma ?
+						pose.gamma = poseFinal.gamma :
+						pose.gamma -= 1;
+				}
+
+			}
+
+			gui.updateDisplay();
 		}
 
 		randomize();
@@ -84,18 +132,18 @@
 
 			if (x > 0) {
 				if (p.position.z > 0) {
-					pose.gamma = 180 - hi
+					poseFinal.gamma = 180 - hi
 				}
 				else {
-					pose.gamma = hi;
+					poseFinal.gamma = hi;
 				}
 			}
 			else {
 				if (p.position.z > 0) {
-					pose.gamma = hi;
+					poseFinal.gamma = hi;
 				}
 				else {
-					pose.gamma = 180 - hi
+					poseFinal.gamma = 180 - hi
 				}
 			}
 		}
@@ -117,51 +165,74 @@
 			positionGamma(p.position.x, hi)
 
 			if (oo1 < 80) {//if point is reachable, we calculate based on the angles from the theoretical solution
-				
+
 				const phi = Math.acos(Math.sqrt(x * x + y * y + z * z) / (2 * a)) * 180 / Math.PI;
 				const tita = Math.atan(y / (Math.sqrt(x * x + z * z))) * 180 / Math.PI;
 				const phtita = phi + tita;
 
 				const beta = 180 - 2 * phi;
 				if (x > 0 && z > 0) {
-					pose.alpha = 180 - phtita;
-					pose.beta = beta;
+					poseFinal.alpha = 180 - phtita;
+					poseFinal.beta = beta;
 				} else if (x > 0 && z < 0) {
-					pose.alpha = phtita;
-					pose.beta = 360 - beta;
+					poseFinal.alpha = phtita;
+					poseFinal.beta = 360 - beta;
 				} else if (x < 0 && z > 0) {
-					pose.alpha = 180 - phtita;
-					pose.beta = beta;
+					poseFinal.alpha = 180 - phtita;
+					poseFinal.beta = beta;
 				} else {//x<0, x<0
-					pose.alpha = phtita;
-					pose.beta = 360 - beta;
+					poseFinal.alpha = phtita;
+					poseFinal.beta = 360 - beta;
 				}
 			} else {
-				console.log("in further:");
+				console.log("ball is further than reachable distance");
 				//else we straighten beta and point the robot with alpha at the point's direction
-				pose.beta = 180;
+				poseFinal.beta = 180;
 
 				let a = Math.atan((p.position.y / Math.abs(p.position.x))) * 180 / Math.PI;
 				console.log(a);
 				if (x > 0 && z > 0) {
-					console.log("in first");
-					pose.alpha = 180 - a;
+					poseFinal.alpha = 180 - a;
 				} else if (x > 0 && z < 0) {
-					console.log("in second");
-					pose.alpha = a;
+					poseFinal.alpha = a;
 				} else if (x < 0 && z > 0) {
-					console.log("in third");
-					pose.alpha = 180 - a;
+					poseFinal.alpha = 180 - a;
 				}
 				else if (x < 0 && z < 0) {
-					console.log("in fourth");
-					pose.alpha = a;
+					poseFinal.alpha = a;
 				}
 			}
 
-			gui.updateDisplay();
+			speeds = determineSpeeds(pose, poseFinal);
+
+			console.log("speeds are:");
+			console.log(speeds);
 		}
 
+
+		const determineDirections = (pose, poseFinal) => {
+			let shouldIncrementAlpha = false, shouldIncrementBeta = false, shouldIncrementGamma = false;
+			if (pose.alpha != poseFinal.alpha) {
+				shouldIncrementAlpha = pose.alpha < poseFinal.alpha
+			}
+			if (pose.beta != poseFinal.beta) {
+				shouldIncrementBeta = pose.beta < poseFinal.beta
+			}
+			if (pose.gamma != poseFinal.gamma) {
+				shouldIncrementGamma = pose.gamma < poseFinal.gamma
+			}
+
+			return { incrAlpha: shouldIncrementAlpha, incrBeta: shouldIncrementBeta, incrGamma: shouldIncrementGamma };
+		}
+
+		const determineSpeeds = (pose, poseFinal) => {
+			// period T/ initial angle diff 
+			let spAlpha = Math.abs(pose.alpha - poseFinal.alpha) / 5;//do it in 5 seconds
+			let spBeta = Math.abs(pose.beta - poseFinal.beta) / 5;//do it in 5 seconds
+			let spGamma = Math.abs(pose.gamma - poseFinal.gamma) / 5;//do it in 5 seconds
+
+			return { speedAlpha: spAlpha, speedBeta: spBeta, speedGamma: spGamma };
+		}
 	</script>
 </body>
 
