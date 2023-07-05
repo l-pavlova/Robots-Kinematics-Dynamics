@@ -50,6 +50,8 @@
 
 		gui.add(pose, 'solve').name('Реши!');
 		gui.open();
+
+		//in degrees per animation frame
 		var speeds = { speedAlpha: 0, speedBeta: 0, speedGamma: 0 };
 
 
@@ -77,11 +79,7 @@
 			isSolved = false;
 		}
 
-		let T = 20;
 		let isSpeedCalculated = false;
-		let v1 = 0;
-		let v2 = 0;
-		let v3 = 0;
 		function animate() {
 			a.rotation.z = THREE.Math.degToRad(pose.alpha - 90);
 			b.rotation.z = THREE.Math.degToRad(180 - pose.beta);
@@ -93,31 +91,31 @@
 				console.log(poseFinal)
 				let directives = determineDirections(pose, poseFinal);
 				if (directives.incrAlpha) {
-					pose.alpha + 1 > poseFinal.alpha ?
+					pose.alpha +  speeds.speedAlpha/5 > poseFinal.alpha ?
 						pose.alpha = poseFinal.alpha :
-						pose.alpha += 1;
+						pose.alpha += speeds.speedAlpha/5;
 				} else {
-					pose.alpha - 1 < poseFinal.alpha ?
+					pose.alpha -  speeds.speedAlpha/5 < poseFinal.alpha ?
 						pose.alpha = poseFinal.alpha :
-						pose.alpha -= 1;
+						pose.alpha -= speeds.speedAlpha/5;
 				}
 				if (directives.incrBeta) {
-					pose.beta + 1 > poseFinal.beta ?
+					pose.beta +  speeds.speedBeta/5> poseFinal.beta ?
 						pose.beta = poseFinal.beta :
-						pose.beta += 1;
+						pose.beta += speeds.speedBeta/5;
 				} else {
-					pose.beta - 1 < poseFinal.beta ?
+					pose.beta -  speeds.speedBeta/5 < poseFinal.beta ?
 						pose.beta = poseFinal.beta :
-						pose.beta -= 1;
+						pose.beta -= speeds.speedBeta;
 				}
 				if (directives.incrGamma) {
-					pose.gamma + 1 < poseFinal.gamma ?
+					pose.gamma + speeds.speedGamma/5< poseFinal.gamma ?
 						pose.gamma = poseFinal.gamma :
-						pose.gamma += 1;
+						pose.gamma += speeds.speedGamma/5;
 				} else {
-					pose.gamma - 1 < poseFinal.gamma ?
+					pose.gamma - speeds.speedGamma/5 < poseFinal.gamma ?
 						pose.gamma = poseFinal.gamma :
-						pose.gamma -= 1;
+						pose.gamma -= speeds.speedGamma/5;
 				}
 
 			}
@@ -180,7 +178,7 @@
 				} else if (x < 0 && z > 0) {
 					poseFinal.alpha = 180 - phtita;
 					poseFinal.beta = beta;
-				} else {//x<0, x<0
+				} else {//x<0, z<0
 					poseFinal.alpha = phtita;
 					poseFinal.beta = 360 - beta;
 				}
@@ -227,9 +225,9 @@
 
 		const determineSpeeds = (pose, poseFinal) => {
 			// period T/ initial angle diff 
-			let spAlpha = Math.abs(pose.alpha - poseFinal.alpha) / 5;//do it in 5 seconds
-			let spBeta = Math.abs(pose.beta - poseFinal.beta) / 5;//do it in 5 seconds
-			let spGamma = Math.abs(pose.gamma - poseFinal.gamma) / 5;//do it in 5 seconds
+			let spAlpha = Math.round(Math.abs(pose.alpha - poseFinal.alpha)/10);//do it in 5 seconds
+			let spBeta = Math.round(Math.abs(pose.beta - poseFinal.beta)/10);//do it in 5 seconds
+			let spGamma = Math.round(Math.abs(pose.gamma - poseFinal.gamma)/10);//do it in 5 seconds
 
 			return { speedAlpha: spAlpha, speedBeta: spBeta, speedGamma: spGamma };
 		}
