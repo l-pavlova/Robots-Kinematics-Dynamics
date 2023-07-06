@@ -93,33 +93,45 @@
 				console.log(poseFinal)
 				let directives = determineDirections(pose, poseFinal);
 				if (directives.incrAlpha) {
-					pose.alpha + 1 > poseFinal.alpha ?
-						pose.alpha = poseFinal.alpha :
-						pose.alpha += 1;
+					for (let i = 0; i < speeds.speedAlpha; i += 0.1) {
+						pose.alpha + 0.1 > poseFinal.alpha ?
+							pose.alpha = poseFinal.alpha :
+							pose.alpha += 0.1;
+					}
+
 				} else {
-					pose.alpha - 1 < poseFinal.alpha ?
-						pose.alpha = poseFinal.alpha :
-						pose.alpha -= 1;
+					for (let i = 0; i < speeds.speedAlpha; i += 0.1) {
+						pose.alpha - 0.1 < poseFinal.alpha ?
+							pose.alpha = poseFinal.alpha :
+							pose.alpha -= 0.1;
+					}
 				}
 				if (directives.incrBeta) {
-					pose.beta + 1 > poseFinal.beta ?
-						pose.beta = poseFinal.beta :
-						pose.beta += 1;
+					for (let i = 0; i < speeds.speedBeta; i += 0.1) {
+						pose.beta + 0.1 > poseFinal.beta ?
+							pose.beta = poseFinal.beta :
+							pose.beta += 0.1;
+					}
 				} else {
-					pose.beta - 1 < poseFinal.beta ?
-						pose.beta = poseFinal.beta :
-						pose.beta -= 1;
+					for (let i = 0; i < speeds.speedBeta; i += 0.1) {
+						pose.beta - 0.1 < poseFinal.beta ?
+							pose.beta = poseFinal.beta :
+							pose.beta -= 0.1;
+					}
 				}
 				if (directives.incrGamma) {
-					pose.gamma + 1 < poseFinal.gamma ?
-						pose.gamma = poseFinal.gamma :
-						pose.gamma += 1;
+					for (let i = 0; i < speeds.speedGamma; i += 0.1) {
+						pose.gamma + 0.1 > poseFinal.gamma ?
+							pose.gamma = poseFinal.gamma :
+							pose.gamma += 0.1;
+					}
 				} else {
-					pose.gamma - 1 < poseFinal.gamma ?
-						pose.gamma = poseFinal.gamma :
-						pose.gamma -= 1;
+					for (let i = 0; i < speeds.speedGamma; i += 0.1) {
+						pose.gamma - 0.1 < poseFinal.gamma ?
+							pose.gamma = poseFinal.gamma :
+							pose.gamma -= 0.1;
+					}
 				}
-
 			}
 
 			gui.updateDisplay();
@@ -227,9 +239,9 @@
 
 		const determineSpeeds = (pose, poseFinal) => {
 			// period T/ initial angle diff 
-			let spAlpha = Math.abs(pose.alpha - poseFinal.alpha) / 5;//do it in 5 seconds
-			let spBeta = Math.abs(pose.beta - poseFinal.beta) / 5;//do it in 5 seconds
-			let spGamma = Math.abs(pose.gamma - poseFinal.gamma) / 5;//do it in 5 seconds
+			let spAlpha = Math.abs(pose.alpha - poseFinal.alpha) / 50;//do it in 5 seconds
+			let spBeta = Math.abs(pose.beta - poseFinal.beta) / 50;//do it in 5 seconds
+			let spGamma = Math.abs(pose.gamma - poseFinal.gamma) / 50;//do it in 5 seconds
 
 			return { speedAlpha: spAlpha, speedBeta: spBeta, speedGamma: spGamma };
 		}
