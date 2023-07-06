@@ -43,6 +43,8 @@
 			gamma: 0
 		};
 
+		let accelerationCounter = 0;
+
 		gui.add(pose, 'randomize').name('Наново');
 		gui_alpha = gui.add(pose, 'alpha', 1, 179).name('&alpha;').step(0.1);
 		gui_beta = gui.add(pose, 'beta', 1, 359).name('&beta;').step(0.1);
@@ -54,6 +56,7 @@
 		//in degrees per animation frame
 		var speeds = { speedAlpha: 0, speedBeta: 0, speedGamma: 0 };
 
+		var currSpeeds = { speedAlpha: 0, speedBeta: 0, speedGamma: 0 };
 
 		//first element of the robot
 		var a = robotElement(1, 40, 5);
@@ -79,12 +82,69 @@
 			isSolved = false;
 		}
 
-		let isSpeedCalculated = false;
 		function animate() {
 			a.rotation.z = THREE.Math.degToRad(pose.alpha - 90);
 			b.rotation.z = THREE.Math.degToRad(180 - pose.beta);
 			a.rotation.y = THREE.Math.degToRad(pose.gamma);
 
+
+			if (accelerationCounter < 40) {
+				accelerationCounter++
+				if (pose.alpha != poseFinal.alpha || pose.beta != poseFinal.beta || pose.gamma != poseFinal.gamma) {
+					if (currSpeeds.speedAlpha < speeds.speedAlpha) {
+						currSpeeds.speedAlpha += 0.1;
+					}
+					if (currSpeeds.speedBeta < speeds.speedBeta) {
+						currSpeeds.speedBeta += 0.1;
+					}
+					if (currSpeeds.speedGamma < speeds.speedGamma) {
+						currSpeeds.speedGamma += 0.1;
+					}
+
+					let directives = determineDirections(pose, poseFinal);
+					if (directives.incrAlpha) {
+						for (let i = 0; i < currSpeeds.speedAlpha; i += 0.1) {
+							pose.alpha + 0.1 > poseFinal.alpha ?
+								pose.alpha = poseFinal.alpha :
+								pose.alpha += 0.1;
+						}
+
+					} else {
+						for (let i = 0; i < currSpeeds.speedAlpha; i += 0.1) {
+							pose.alpha - 0.1 < poseFinal.alpha ?
+								pose.alpha = poseFinal.alpha :
+								pose.alpha -= 0.1;
+						}
+					}
+					if (directives.incrBeta) {
+						for (let i = 0; i < currSpeeds.speedBeta; i += 0.1) {
+							pose.beta + 0.1 > poseFinal.beta ?
+								pose.beta = poseFinal.beta :
+								pose.beta += 0.1;
+						}
+					} else {
+						for (let i = 0; i < currSpeeds.speedBeta; i += 0.1) {
+							pose.beta - 0.1 < poseFinal.beta ?
+								pose.beta = poseFinal.beta :
+								pose.beta -= 0.1;
+						}
+					}
+					if (directives.incrGamma) {
+						for (let i = 0; i < currSpeeds.speedGamma; i += 0.1) {
+							pose.gamma + 0.1 > poseFinal.gamma ?
+								pose.gamma = poseFinal.gamma :
+								pose.gamma += 0.1;
+						}
+					} else {
+						for (let i = 0; i < currSpeeds.speedGamma; i += 0.1) {
+							pose.gamma - 0.1 < poseFinal.gamma ?
+								pose.gamma = poseFinal.gamma :
+								pose.gamma -= 0.1;
+						}
+					}
+				}
+				return;
+			}
 
 			if (pose.alpha != poseFinal.alpha || pose.beta != poseFinal.beta || pose.gamma != poseFinal.gamma) {
 				console.log(pose)
