@@ -50,6 +50,8 @@
 
 		gui.add(pose, 'solve').name('Реши!');
 		gui.open();
+
+		//in degrees per animation frame
 		var speeds = { speedAlpha: 0, speedBeta: 0, speedGamma: 0 };
 
 
@@ -77,11 +79,7 @@
 			isSolved = false;
 		}
 
-		let T = 20;
 		let isSpeedCalculated = false;
-		let v1 = 0;
-		let v2 = 0;
-		let v3 = 0;
 		function animate() {
 			a.rotation.z = THREE.Math.degToRad(pose.alpha - 90);
 			b.rotation.z = THREE.Math.degToRad(180 - pose.beta);
@@ -192,7 +190,7 @@
 				} else if (x < 0 && z > 0) {
 					poseFinal.alpha = 180 - phtita;
 					poseFinal.beta = beta;
-				} else {//x<0, x<0
+				} else {//x<0, z<0
 					poseFinal.alpha = phtita;
 					poseFinal.beta = 360 - beta;
 				}
